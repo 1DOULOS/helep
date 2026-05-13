@@ -1,6 +1,6 @@
 # L4 Design Process Document — HELEP
 
-**Student:** 1DOULOS  
+**Student:** NJINDA BRIAN JR  
 **Project:** HELEP — Emergency Location & Emergency Response Platform  
 **Date:** 2026-05-13  
 **Word count:** ~2800

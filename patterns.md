@@ -1,6 +1,6 @@
 # L3 Patterns-in-Code Document — HELEP
 
-**Student:** 1DOULOS  
+**Student:** NJINDA BRIAN JR  
 **Project:** HELEP — Emergency Location & Emergency Response Platform  
 **Date:** 2026-05-13
 
