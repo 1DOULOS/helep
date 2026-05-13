@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: helep-config
+  namespace: helep
+data:
+  KAFKA_BOOTSTRAP: "helep-kafka-kafka-bootstrap:9092"
+  MATCHER: "nearest"

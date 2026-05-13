@@ -1,0 +1,97 @@
+# KafkaTopic CRDs — managed by Strimzi Topic Operator.
+# All topics use incident_id as the partition key so all events for a single
+# SOS land on one partition → ordering preserved → no double-dispatch possible.
+#
+# Partition count 3 matches num.partitions in kafka-cluster.yaml.
+
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: user-registered
+  namespace: helep
+  labels:
+    strimzi.io/cluster: helep-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: "604800000"   # 7 days
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: sos-triggered
+  namespace: helep
+  labels:
+    strimzi.io/cluster: helep-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: "604800000"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: sos-cancelled
+  namespace: helep
+  labels:
+    strimzi.io/cluster: helep-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: "604800000"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: responder-assigned
+  namespace: helep
+  labels:
+    strimzi.io/cluster: helep-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: "604800000"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: responder-confirmed
+  namespace: helep
+  labels:
+    strimzi.io/cluster: helep-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: "604800000"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: safety-zone-entered
+  namespace: helep
+  labels:
+    strimzi.io/cluster: helep-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: "604800000"
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: notification-sent
+  namespace: helep
+  labels:
+    strimzi.io/cluster: helep-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: "604800000"

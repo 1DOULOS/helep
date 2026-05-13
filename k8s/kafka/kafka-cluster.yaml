@@ -1,0 +1,49 @@
+# Strimzi Kafka CR — single-node KRaft cluster (no Zookeeper).
+# For production scale out to 3 brokers and 3 controller nodes.
+#
+# Prerequisites:
+#   kubectl apply -f https://strimzi.io/install/latest?namespace=helep
+#
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: helep-kafka
+  namespace: helep
+spec:
+  kafka:
+    version: 3.7.0
+    replicas: 1
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+      default.replication.factor: 1
+      min.insync.replicas: 1
+      num.partitions: 3                      # 3 partitions per topic — allows up to 3 concurrent consumers per group
+      log.retention.hours: 168               # 7-day retention for incident replay/audit
+    storage:
+      type: persistent-claim
+      size: 10Gi
+      deleteClaim: false
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 500m
+      limits:
+        memory: 1Gi
+        cpu: 1000m
+  zookeeper:
+    # Strimzi still requires this block even for KRaft-mode images; leave minimal.
+    replicas: 1
+    storage:
+      type: persistent-claim
+      size: 5Gi
+      deleteClaim: false
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}

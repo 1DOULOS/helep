@@ -3,7 +3,7 @@
 Patterns:
   - Pub/Sub (Kafka topics + consumer groups)
   - Outbox-lite (publish + db-write live in same async block in main.py)
-  - Circuit breaker stub (TODO: student completes)
+  - Circuit Breaker (completed below — CLOSED/OPEN/HALF_OPEN state machine)
 
 Partition keying:
   Every saga-critical publish should pass key=<incident_id> (or <user_id>).
@@ -14,6 +14,7 @@ Partition keying:
 from __future__ import annotations
 import json
 import os
+import time as _time
 from typing import Awaitable, Callable, Iterable
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
@@ -54,8 +55,17 @@ async def health() -> bool:
         return False
 
 
-# ---- Circuit breaker stub (student to complete) ----
+# ---- Circuit Breaker (completed) ----
 class CircuitBreaker:
+    """Three-state circuit breaker: CLOSED → OPEN → HALF_OPEN → CLOSED.
+
+    State transitions:
+      CLOSED    (opened_at is None):  allow all calls; count failures.
+      OPEN      (opened_at is set, elapsed < reset_after_s): reject all calls.
+      HALF_OPEN (opened_at is set, elapsed >= reset_after_s): let one probe
+                through. Success → CLOSED; failure → OPEN again.
+    """
+
     def __init__(self, fail_threshold: int = 5, reset_after_s: float = 10.0):
         self.fail_threshold = fail_threshold
         self.reset_after_s = reset_after_s
@@ -63,14 +73,28 @@ class CircuitBreaker:
         self.opened_at: float | None = None
 
     def allow(self) -> bool:
-        # TODO (student): implement open/half-open/closed state machine
-        return True
+        if self.opened_at is None:
+            # CLOSED state — gate is open
+            return True
+        elapsed = _time.monotonic() - self.opened_at
+        if elapsed >= self.reset_after_s:
+            # HALF_OPEN: allow one probe; prime so next failure reopens immediately
+            self.opened_at = None
+            self.fails = self.fail_threshold - 1
+            return True
+        # OPEN state — reject
+        return False
 
     def record_success(self) -> None:
+        # Any success resets to CLOSED
         self.fails = 0
+        self.opened_at = None
 
     def record_failure(self) -> None:
         self.fails += 1
+        # Trip to OPEN once threshold is crossed (only if not already open)
+        if self.fails >= self.fail_threshold and self.opened_at is None:
+            self.opened_at = _time.monotonic()
 
 
 _breaker = CircuitBreaker()

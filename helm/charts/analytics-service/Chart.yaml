@@ -1,0 +1,5 @@
+﻿apiVersion: v2
+name: analytics-service
+description: HELEP analytics-service sub-chart
+type: application
+version: 0.1.0

@@ -1,0 +1,140 @@
+# Umbrella chart values — override per sub-chart
+global:
+  imageRegistry: ghcr.io/1doulos
+  imageTag: latest
+  kafkaBootstrap: helep-kafka-kafka-bootstrap:9092
+  jwtSecret: ""          # injected via Secret (see k8s/secrets.yaml)
+
+user-service:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/1doulos/user-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    port: 8001
+  env:
+    SERVICE_PORT: "8001"
+    MATCHER: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: standard
+
+sos-service:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/1doulos/sos-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    port: 8002
+  env:
+    SERVICE_PORT: "8002"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: standard
+
+dispatch-service:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/1doulos/dispatch-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    port: 8003
+  env:
+    SERVICE_PORT: "8003"
+    MATCHER: nearest
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: standard
+
+notification-service:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/1doulos/notification-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    port: 8004
+  env:
+    SERVICE_PORT: "8004"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 70
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: standard
+
+analytics-service:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/1doulos/analytics-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    port: 8005
+  env:
+    SERVICE_PORT: "8005"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  autoscaling:
+    enabled: false
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: standard

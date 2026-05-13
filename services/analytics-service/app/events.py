@@ -1,4 +1,4 @@
-"""Apache Kafka producer + consumer helpers (aiokafka).
+﻿"""Apache Kafka producer + consumer helpers (aiokafka).
 
 Patterns:
   - Pub/Sub (Kafka topics + consumer groups)
@@ -14,6 +14,7 @@ Partition keying:
 from __future__ import annotations
 import json
 import os
+import time as _time
 from typing import Awaitable, Callable, Iterable
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
@@ -45,7 +46,7 @@ async def stop_producer() -> None:
 
 
 async def health() -> bool:
-    """Liveness ping for /readyz — verify broker reachable + metadata fetch works."""
+    """Liveness ping for /readyz â€” verify broker reachable + metadata fetch works."""
     try:
         p = await producer()
         await p.client.fetch_all_metadata()
@@ -111,7 +112,8 @@ async def consume(topics: Iterable[str], group: str, handler: Handler) -> None:
                 await handler(payload)
                 await consumer.commit()
             except Exception:
-                # leave un-committed → re-delivered on next read (at-least-once)
+                # leave un-committed â†’ re-delivered on next read (at-least-once)
                 pass
     finally:
         await consumer.stop()
+

@@ -1,0 +1,68 @@
+# Grafana dashboard ConfigMap — loaded automatically via sidecar.
+# Key metrics displayed:
+#   helep_sos_triggers_total  — SOS rate by mode (online/offline)
+#   helep_dispatch_assigned_total — dispatch throughput
+#   helep_notifications_sent_total — notification delivery rate
+#   helep_analytics_events_total  — event sink health
+#   helep_user_signups_total / helep_user_logins_total — user activity
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: helep-grafana-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  helep-overview.json: |
+    {
+      "title": "HELEP — Emergency Response Platform",
+      "uid": "helep-overview",
+      "panels": [
+        {
+          "title": "SOS Trigger Rate",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(helep_sos_triggers_total[1m])",
+              "legendFormat": "{{mode}}"
+            }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+        },
+        {
+          "title": "Dispatch Assignments",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "helep_dispatch_assigned_total",
+              "legendFormat": "total assigned"
+            }
+          ],
+          "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}
+        },
+        {
+          "title": "Notification Delivery Rate",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(helep_notifications_sent_total[1m])",
+              "legendFormat": "{{channel}}/{{template}}"
+            }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+        },
+        {
+          "title": "Active Users (Signups)",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "increase(helep_user_signups_total[1h])",
+              "legendFormat": "signups/hour"
+            }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+        }
+      ],
+      "schemaVersion": 39,
+      "version": 1
+    }
