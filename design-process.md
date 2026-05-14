@@ -90,6 +90,48 @@ HELEP (Harnessing Emergency Location & Emergency Protocol) is a mobile-first eme
 *Measure:* P99 SOS-to-notification latency ≤ 2 s at 100 req/s sustained.  
 *Justification:* Mass-casualty events are exactly when the platform must not degrade.
 
+### Diagram 1 — Saga Happy-Path Sequence
+
+```mermaid
+sequenceDiagram
+    participant C  as Citizen
+    participant S  as sos-service
+    participant K  as Kafka
+    participant D  as dispatch-service
+    participant N  as notification-service
+    participant A  as analytics-service
+
+    C->>S: POST /sos {lat, lon}
+    S->>S: insert_incident()
+    S->>K: produce sos.triggered (key=incident_id)
+    K-->>D: poll sos.triggered
+    D->>D: Strategy.pick() nearest free responder
+    D->>D: reserve_responder_for() [atomic UPDATE busy=0]
+    D->>K: produce responder.assigned (key=incident_id)
+    K-->>N: poll responder.assigned
+    N->>N: log simulated SMS + persist row
+    N->>K: produce notification.sent
+    K-->>A: poll all topics
+    A->>A: bump event counters
+```
+
+### Diagram 2 — Saga Compensation (Cancel)
+
+```mermaid
+sequenceDiagram
+    participant C  as Citizen
+    participant S  as sos-service
+    participant K  as Kafka
+    participant D  as dispatch-service
+
+    C->>S: POST /sos/{id}/cancel
+    S->>S: set incident status=CANCELLED
+    S->>K: produce sos.cancelled (key=incident_id)
+    K-->>D: poll sos.cancelled
+    D->>D: release_assignment() [busy=0, status=RELEASED]
+    D->>K: produce responder.confirmed status=RELEASED
+```
+
 ---
 
 ## 4. Component Identification
@@ -160,6 +202,29 @@ Prescribed by the course brief. Justified by three NFRs:
 | Circuit Breaker | All `app/events.py:58–91` | Protect against Kafka broker failure cascading into service crashes |
 | Idempotency Key | `dispatch/db.py:969–987` | Ensure at-most-once assignment under at-least-once delivery |
 | Bulkhead | `dispatch/main.py:748`, `notification/main.py:1087` | Isolate slow analytics consumer from fast dispatch path |
+
+---
+
+### Diagram 3 — Event Topology (Kafka Topics)
+
+```mermaid
+graph LR
+    US[user-service] -->|user.registered| ANA[analytics-service]
+    SOS[sos-service] -->|sos.triggered| DSP[dispatch-service]
+    SOS -->|sos.triggered| NOT[notification-service]
+    SOS -->|sos.triggered| ANA
+    SOS -->|sos.cancelled| DSP
+    SOS -->|sos.cancelled| ANA
+    DSP -->|responder.assigned| NOT
+    DSP -->|responder.assigned| ANA
+    DSP -->|responder.confirmed| NOT
+    DSP -->|responder.confirmed| ANA
+    DSP -->|safety.zone.entered| NOT
+    DSP -->|safety.zone.entered| ANA
+    NOT -->|notification.sent| ANA
+```
+
+*All topics are partitioned by `incident_id` (3 partitions). Each service registers its own consumer group, providing Bulkhead isolation — a slow analytics consumer cannot delay dispatch throughput.*
 
 ---
 
